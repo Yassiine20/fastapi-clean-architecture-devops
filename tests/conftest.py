@@ -11,6 +11,7 @@ if os.getenv("ENV") not in ["test"]:
 
 from fastapi.testclient import TestClient
 from loguru import logger
+from sqlalchemy import inspect
 from sqlmodel import SQLModel, create_engine
 
 from app.core.config import configs
@@ -54,7 +55,11 @@ def reset_db():
     logger.info(engine)
     with engine.begin() as conn:
         if "test" in configs.DATABASE_URI:
-            SQLModel.metadata.drop_all(conn)
+            # Drop all tables using metadata with proper order handling
+            inspector = inspect(conn)
+            if inspector.get_table_names():
+                SQLModel.metadata.reflect(conn)
+                SQLModel.metadata.drop_all(conn)
             SQLModel.metadata.create_all(conn)
             insert_default_data(conn)
         else:
