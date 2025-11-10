@@ -22,20 +22,16 @@ jobs:
           python-version: ${{env.PYTHON_VERSION}}
 
       - name: Install linting tools
-        run: pip install black isort flake8 
+        run: pip install black isort flake8
       
-      - name: Format code with Black
-        run: black . -l 120 --extend-exclude "migrations"
+      - name: Check code formatting with Black
+        run: black . -l 120 --check --extend-exclude "migrations"
 
-      - name: Format imports with isort
-        run: isort . -l 120 --profile black --skip migrations
-
-      - name: Check for formatting changes
-        run: |
-          git diff --exit-code || (echo "Code formatting changes detected. Please run 'black . -l 120 && isort . -l 120 --profile black' locally and commit the changes." && exit 1)
+      - name: Check imports with isort
+        run: isort . -l 120 --profile black --check-only --skip migrations
 
       - name: Lint with Flake8
-        run: flake8 app tests --max-line-length=120 --extend-ignore=E203,W503
+        run: flake8 app tests
 
   test:
     runs-on: ubuntu-latest
@@ -72,7 +68,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Cache pip dendencies
+      - name: Cache pip dependencies
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
@@ -81,15 +77,14 @@ jobs:
             ${{runner.os}}-pip-
 
       - name: Install dependencies
-        run: 
+        run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       
       - name: Run migrations
         run: alembic -x ENV=test upgrade head
 
-
-      - name: Run tests with coverage tp Codecov
+      - name: Run tests with coverage
         run: pytest --cov=app --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage to Codecov
