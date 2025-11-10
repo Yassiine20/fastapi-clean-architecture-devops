@@ -25,10 +25,10 @@ jobs:
         run: pip install black isort flake8 
       
       - name: Format code with Black
-        run: black . -l 120
+        run: black . -l 120 --extend-exclude "migrations"
 
       - name: Format imports with isort
-        run: isort . -l 120 --profile black
+        run: isort . -l 120 --profile black --skip migrations
 
       - name: Check for formatting changes
         run: |
