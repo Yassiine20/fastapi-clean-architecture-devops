@@ -54,7 +54,7 @@ def reset_db():
     logger.info(engine)
     with engine.begin() as conn:
         if "test" in configs.DATABASE_URI:
-            SQLModel.metadata.drop_all(conn)
+            SQLModel.metadata.drop_all(conn, checkfirst=True)
             SQLModel.metadata.create_all(conn)
             insert_default_data(conn)
         else:
