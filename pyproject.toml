@@ -1,0 +1,12 @@
+[tool.black]
+line-length = 120
+extend-exclude = '''
+/(
+    migrations
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+skip_glob = ["migrations/*"]
