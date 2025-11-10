@@ -24,11 +24,15 @@ jobs:
       - name: Install linting tools
         run: pip install black isort flake8 
       
-      - name: Check code formatting with Black
-        run : black . -l 120 --check --diff 
+      - name: Format code with Black
+        run: black . -l 120
 
-      - name: Check imports with isort
-        run: isort . -l 120 --profile black --check-only --diff
+      - name: Format imports with isort
+        run: isort . -l 120 --profile black
+
+      - name: Check for formatting changes
+        run: |
+          git diff --exit-code || (echo "Code formatting changes detected. Please run 'black . -l 120 && isort . -l 120 --profile black' locally and commit the changes." && exit 1)
 
       - name: Lint with Flake8
         run: flake8 app tests --max-line-length=120 --extend-ignore=E203,W503
