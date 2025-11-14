@@ -1,0 +1,51 @@
+# Staging overrides for Docker Compose
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: fca-db-staging
+    environment:
+      POSTGRES_DB: stage-fca
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports: !reset
+      - "5433:5432"  # Use a different host port to avoid dev conflicts
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fca-network
+    restart: unless-stopped
+
+  app:
+    container_name: fca-app-staging
+    environment:
+      ENV: staging
+      DB: postgresql
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: db
+      DB_PORT: 5432
+      SECRET_KEY: staging-secret-key-change-me
+    ports:
+      - "8001:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "alembic -x ENV=staging upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    networks:
+      - fca-network
+    restart: unless-stopped
+
+volumes:
+  postgres_test_data:
+    driver: local
+
+networks:
+  fca-network:
+    driver: bridge

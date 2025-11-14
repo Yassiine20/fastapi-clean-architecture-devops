@@ -1,0 +1,64 @@
+# Development environment - runs on your laptop
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: fca-db-dev
+    environment:
+      POSTGRES_DB: dev-fca
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fca-network
+    restart: unless-stopped
+
+  # Application
+  app:
+    image: fca-api:latest
+    container_name: fca-app-dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ENV: dev
+      DB: postgresql
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: db
+      DB_PORT: 5432
+      SECRET_KEY: dev-secret-key-not-for-production
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app
+      - ./migrations:/app/migrations
+      - ./alembic.ini:/app/alembic.ini
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "
+        alembic -x ENV=dev upgrade head && 
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+    networks:
+      - fca-network
+    restart: unless-stopped
+
+volumes:
+  postgres_dev_data:
+    driver: local
+
+networks:
+  fca-network:
+    driver: bridge

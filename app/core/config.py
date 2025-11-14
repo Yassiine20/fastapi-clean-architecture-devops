@@ -18,7 +18,7 @@ class Configs(BaseSettings):
     PROJECT_NAME: str = "fca-api"
     ENV_DATABASE_MAPPER: dict = {
         "prod": "fca",
-        "stage": "stage-fca",
+        "staging": "stage-fca",
         "dev": "dev-fca",
         "test": "test-fca",
     }
